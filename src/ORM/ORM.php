@@ -836,7 +836,7 @@ class ORM
 
         $result = call_user_func_array([$this->builder, $name], $arguments);
 
-        if (in_array($name, ['lastQuery'])) {
+        if (in_array($name, ['lastQuery', 'count'])) {
             return $result;
         }
 
