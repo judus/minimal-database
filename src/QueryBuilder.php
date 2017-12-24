@@ -744,8 +744,7 @@ class QueryBuilder
             try {
                 $result = $this->db->query($sql);
             } catch (\PDOException $e) {
-                throw new DatabaseException($e->getMessage(),
-                    $this->getLastQuery());
+                throw new DatabaseException($e->getMessage() . '<br>' . $this->getLastQuery()[0]);
             }
 
             $data = $this->fetchAssoc($result);
@@ -817,9 +816,7 @@ class QueryBuilder
             $this->setLastQuery($stmt->queryString, $params);
             $stmt->execute($params);
         } catch (\PDOException $e) {
-            throw new DatabaseException(
-                $e->getMessage(), [$sql, $params, $this]
-            );
+            throw new DatabaseException($e->getMessage() . '<br>' . $this->getLastQuery()[0]);
         }
 
         $insertId = $this->getInsertId();
@@ -877,8 +874,8 @@ class QueryBuilder
 
             $stmt->execute($params);
         } catch (\PDOException $e) {
-            throw new DatabaseException($e->getMessage(), $this->getLastQuery(),
-                $this);
+            throw new DatabaseException($e->getMessage() . '<br>' . $this->getLastQuery()[0]);
+
         }
 
         return $stmt->rowCount();

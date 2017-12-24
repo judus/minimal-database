@@ -305,7 +305,7 @@ class PDO
             ]);
 
         } catch (\PDOException $e) {
-            throw new DatabaseException($e->getMessage(), $config);
+            throw new DatabaseException($e->getMessage());
         }
 
         return self::$connection;
