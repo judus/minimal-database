@@ -65,6 +65,11 @@ class QueryBuilder
     /**
      * @var
      */
+    protected $parameters = [];
+
+    /**
+     * @var
+     */
     protected $where;
 
     /**
@@ -288,17 +293,45 @@ class QueryBuilder
         return $this;
     }
 
+    public function addParameter($key, $value)
+    {
+        $this->parameters[':' . $key] = $value;
+    }
+
+    public function getParameters()
+    {
+        return $this->parameters;
+    }
+
+    public function clearParameters()
+    {
+        $this->parameters = [];
+    }
+
     /**
      * @return mixed
      */
     public function getWhere()
     {
-        $condition = '';
-        foreach ($this->getWheres() as $where) {
-            list($key, $con, $val, $and) = $this->getCondition($where);
-            $condition .= empty($condition) ? '' : $and;
-            $condition .= $key . $con . $val;
-        }
+
+        //if (empty($this->where)) {
+            $condition = '';
+            $i = 0;
+            foreach ($this->getWheres() as $where) {
+                list($key, $con, $val, $and) = $this->getCondition($where, $i++);
+                $condition .= empty($condition) ? '' : $and;
+
+                if ($con == ' IN ') {
+                    $condition .= $key . $con . '(' . $val . ')';
+                } else {
+                    $condition .= $key . $con . $val;
+                }
+
+
+            }
+        //} else {
+            //$condition = $this->where;
+        //}
 
         return !empty($condition) ?
             " WHERE (" . $condition . ")" : null;
@@ -339,8 +372,13 @@ class QueryBuilder
      */
     public function where($strOrArray)
     {
-        foreach (func_get_args() as $arg) {
-            $this->addWheres($arg);
+
+        if (func_num_args() === 1 && is_string($strOrArray)) {
+            $this->setWhere($strOrArray);
+        } else {
+            foreach (func_get_args() as $arg) {
+                $this->addWheres($arg);
+            }
         }
 
         return $this;
@@ -537,12 +575,22 @@ class QueryBuilder
         $this->db = PDO::connection();
     }
 
+
+    public function clearQuery()
+    {
+        $this->clearParameters();
+        $this->clearSelect();
+        $this->clearWhere();
+        $this->clearWheres();
+        $this->clearLimit();
+    }
+
     /**
      * @param $param
      *
      * @return array
      */
-    protected function getCondition($param)
+    protected function getCondition($param, $i)
     {
         $key = null;
         $cond = "=";
@@ -582,15 +630,20 @@ class QueryBuilder
         }
 
         if ($cond == 'IN') {
-            $value = "(" . $value . ")";
+            //$value = "(" . $value . ")";
         } else {
-            $value = $this->db->quote($value);
+            //$value = $this->db->quote($value);
         }
+
+        $suffix = '_' . $i;
+
+        $this->addParameter($key . $suffix, $value);
 
         return [
             str_replace('``', '', "`" . $key . "`"),
             " " . trim($cond) . " ",
-            is_null($value) ? "NULL" : $value,
+            //is_null($value) ? "NULL" : $value,
+            ":" . $key . $suffix,
             " " . trim($and) . " "
         ];
     }
@@ -628,17 +681,15 @@ class QueryBuilder
         $this->setLastQuery($sql);
 
         try {
-            $results = $this->db->query($sql);
+            $stmt = $this->db->prepare($sql);
+            $this->setLastQuery($stmt->queryString, $this->getParameters());
+            $stmt->execute($this->getParameters());
         } catch (\PDOException $e) {
             throw new DatabaseException($e->getMessage() . '<br>' . $this->getLastQuery()[0]);
         }
 
-        $this->setResult($results);
-
-        $this->clearSelect();
-        $this->clearWhere();
-        $this->clearWheres();
-        $this->clearLimit();
+        $this->setResult($stmt);
+        $this->clearQuery();
 
         return $this;
     }
@@ -671,6 +722,8 @@ class QueryBuilder
 
             throw new DatabaseException($e->getMessage() . '<br>' . $this->getLastQuery()[0]);
         }
+
+        $this->clearQuery();
 
         return $results->fetchAssoc();
     }
@@ -724,7 +777,6 @@ class QueryBuilder
         } catch (\PDOException $e) {
             throw new DatabaseException($e->getMessage() . '<br>' . $sql);
         }
-
         return $this->fetchAssoc($result);
 
     }
