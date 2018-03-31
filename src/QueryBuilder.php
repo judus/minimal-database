@@ -4,7 +4,7 @@ namespace Maduser\Minimal\Database;
 
 use Maduser\Minimal\Collections\Collection;
 use Maduser\Minimal\Database\Exceptions\DatabaseException;
-use Maduser\Minimal\Database\Connectors\PDO;
+use Maduser\Minimal\Database\DB;
 use Maduser\Minimal\Database\ORM\ORM;
 
 /**
@@ -554,7 +554,7 @@ class QueryBuilder
     public function setLastQuery($string, $params = null)
     {
         $this->lastQuery = [$string, $params];
-        PDO::addExecutedQuery($this->lastQuery);
+        $this->pdo->addExecutedQuery($this->lastQuery);
 
         return $this;
     }
@@ -572,7 +572,8 @@ class QueryBuilder
      */
     public function __construct()
     {
-        $this->db = PDO::connection();
+        $this->pdo = DB::connector();
+        $this->db = $this->pdo->connection();
     }
 
 
@@ -970,7 +971,7 @@ class QueryBuilder
     {
         $sql = "SELECT * 
             FROM information_schema.tables
-            WHERE table_schema = '" . PDO::getDatabase() . "' 
+            WHERE table_schema = '" . $this->pdo->getDatabase() . "' 
                 AND table_name = '" . $this->getTable() . "'
             LIMIT 1;";
 
@@ -1026,6 +1027,7 @@ class QueryBuilder
     {
         $sql = "TRUNCATE TABLE `" . $this->getTable(true) . "`;";
         try {
+            $this->setLastQuery($sql);
             $this->db->query($sql);
         } catch (\PDOException $e) {
             throw new DatabaseException($e->getMessage() . '<br>' . $sql);

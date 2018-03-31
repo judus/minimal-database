@@ -1,279 +1,350 @@
 <?php namespace Maduser\Minimal\Database\Connectors;
 
-use Exception;
 use Maduser\Minimal\Database\Exceptions\DatabaseException;
-
 
 /**
  * Class PDO
  *
- * @package Maduser\Minimal\Libraries\Database
+ * @package Maduser\Minimal\Database
  */
 class PDO
 {
+    private $name;
+
     /**
      * The database handler to use
      *
      * @var \PDO
      */
-    private static $handler = \PDO::class;
+    private $handler = \PDO::class;
 
     /**
      * Define the database driver
      *
      * @var string
      */
-    private static $driver = 'mysql';
+    private $driver = 'mysql';
 
     /**
      * The database host
      *
      * @var string
      */
-    private static $host = '127.0.0.1';
+    private $host = '127.0.0.1';
 
     /**
      * The database port
      *
      * @var string
      */
-    private static $port = '3306';
+    private $port = '3306';
 
     /**
      * The database charset
      *
      * @var string
      */
-    private static $charset = 'utf8';
+    private $charset = 'utf8';
 
     /**
      * The database name to use
      *
      * @var string
      */
-    private static $database;
+    private $database;
 
     /**
      * The login user
      *
      * @var string
      */
-    private static $user;
+    private $user;
 
     /**
      * The login password
      *
      * @var string
      */
-    private static $password;
+    private $password;
 
     /**
      * The options the handler accepts
      *
      * @var array
      */
-    private static $handlerOptions = [];
+    private $handlerOptions = null;
 
     /**
      * The current connection
      *
      * @var \PDO
      */
-    private static $connection;
+    private $connection;
 
-    private static $executedQueries = [];
+    private $executedQueries = [];
 
-     /**
+    /**
+     * @return mixed
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * @param mixed $name
+     *
+     * @return PDO
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
      * @return object
      */
-    public static function getHandler()
+    public function getHandler()
     {
-        return self::$handler;
+        if (is_null($this->handler)) {
+            $this->handler = \PDO::class;
+        }
+
+        return $this->handler;
     }
 
     /**
      * @param string $handler
+     *
+     * @return PDOConnector
      */
-    public static function setHandler($handler)
+    public function setHandler($handler)
     {
-        self::$handler = $handler;
+        $this->handler = $handler;
+
+        return $this;
     }
 
     /**
      * @return string
      */
-    public static function getDriver()
+    public function getDriver()
     {
-        return self::$driver;
+        return $this->driver;
     }
 
     /**
      * @param string $driver
+     *
+     * @return PDOConnector
      */
-    public static function setDriver($driver)
+    public function setDriver($driver)
     {
-        self::$driver = $driver;
+        $this->driver = $driver;
+
+        return $this;
     }
 
     /**
      * @return string
      */
-    public static function getCharset()
+    public function getCharset()
     {
-        return self::$charset;
+        return $this->charset;
     }
 
     /**
      * @param string $charset
+     *
+     * @return PDOConnector
      */
-    public static function setCharset($charset)
+    public function setCharset($charset)
     {
-        self::$charset = $charset;
+        $this->charset = $charset;
+
+        return $this;
     }
 
     /**
      * @return string
      */
-    public static function getPort()
+    public function getPort()
     {
-        return self::$port;
+        return $this->port;
     }
 
     /**
      * @param string $port
+     *
+     * @return PDOConnector
      */
-    public static function setPort($port)
+    public function setPort($port)
     {
-        self::$port = $port;
+        $this->port = $port;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public static function getHost()
+    public function getHost()
     {
-        return self::$host;
+        return $this->host;
     }
 
     /**
-     * @param mixed $host
+     * @param string $host
+     *
+     * @return PDOConnector
      */
-    public static function setHost($host)
+    public function setHost($host)
     {
-        self::$host = $host;
+        $this->host = $host;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public static function getDatabase()
+    public function getDatabase()
     {
-        return self::$database;
+        return $this->database;
     }
 
     /**
-     * @param mixed $database
+     * @param string $database
+     *
+     * @return PDOConnector
      */
-    public static function setDatabase($database)
+    public function setDatabase($database)
     {
-        self::$database = $database;
+        $this->database = $database;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public static function getUser()
+    public function getUser()
     {
-        return self::$user;
+        return $this->user;
     }
 
     /**
-     * @param mixed $user
+     * @param string $user
+     *
+     * @return PDOConnector
      */
-    public static function setUser($user)
+    public function setUser($user)
     {
-        self::$user = $user;
+        $this->user = $user;
+
+        return $this;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public static function getPassword()
+    public function getPassword()
     {
-        return self::$password;
+        return $this->password;
     }
 
     /**
-     * @param mixed $password
+     * @param string $password
+     *
+     * @return PDOConnector
      */
-    public static function setPassword($password)
+    public function setPassword($password)
     {
-        self::$password = $password;
+        $this->password = $password;
+
+        return $this;
     }
+
 
     /**
      * @return array
      */
-    public static function getHandlerOptions()
+    public function getHandlerOptions()
     {
-        return self::$handlerOptions;
+        if (is_null($this->handlerOptions)) {
+            $this->handlerOptions = [
+                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                \PDO::ATTR_EMULATE_PREPARES => false,
+                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
+            ];
+        }
+
+        return $this->handlerOptions;
     }
 
     /**
      * @param array $handlerOptions
      */
-    public static function setHandlerOptions($handlerOptions)
+    public function setHandlerOptions($handlerOptions)
     {
-        self::$handlerOptions = $handlerOptions;
+        $this->handlerOptions = $handlerOptions;
     }
 
     /**
      * @param $key
      * @param $value
      */
-    public static function addHandlerOptions($key, $value)
+    public function addHandlerOptions($key, $value)
     {
-        self::$handlerOptions[$key] = $value;
+        $this->handlerOptions[$key] = $value;
     }
 
     /**
      * @return \PDO
      */
-    public static function getConnection()
+    public function getConnection()
     {
-        return self::$connection;
+        return $this->connection;
     }
 
     /**
      * @param array $connection
      */
-    public static function setConnection(array $connection)
+    public function setConnection(array $connection)
     {
-        self::$connection = $connection;
+        $this->connection = $connection;
+    }
+
+    public function __construct($config = [], $name = null)
+    {
+        $this->setName($name ? $name : uniqid());
+        $this->config($config);
     }
 
     /**
      * @return array
      */
-    public static function getExecutedQueries(): array
+    public function getExecutedQueries(): array
     {
-        return self::$executedQueries;
+        return $this->executedQueries;
     }
 
     /**
      * @param array $executedQueries
      */
-    public static function setExecutedQueries(array $executedQueries)
+    public function setExecutedQueries(array $executedQueries)
     {
-        self::$executedQueries = $executedQueries;
+        $this->executedQueries = $executedQueries;
     }
 
     /**
      * @param $value
      */
-    public static function addExecutedQuery($value)
+    public function addExecutedQuery($value)
     {
-        self::$executedQueries[] = $value;
+        $this->executedQueries[] = $value;
     }
 
     /**
@@ -283,48 +354,48 @@ class PDO
      * @param bool $forceConnect
      *
      * @return \PDO
-     * @throws Exception
+     * @throws DatabaseException
      */
-    public static function connection($config = null, $forceConnect = false)
+    public function connection($config = null, $forceConnect = false)
     {
-        if (self::$connection && !$forceConnect) {
-            return self::$connection;
+
+        if ($this->connection && !$forceConnect) {
+            return $this->connection;
         }
 
-        ! isset($config) || self::config($config);
+        !isset($config) || $this->config($config);
 
-        $ref = new \ReflectionClass(self::getHandler());
+        $ref = new \ReflectionClass($this->getHandler());
 
         try {
             /** @var \PDO $connection */
-            self::$connection = $ref->newInstanceArgs([
-                self::getConnectionString(),
-                self::getUser(),
-                self::getPassword(),
-                self::getHandlerOptions()
+            $this->connection = $ref->newInstanceArgs([
+                $this->getConnectionString(),
+                $this->getUser(),
+                $this->getPassword(),
+                $this->getHandlerOptions()
             ]);
-
         } catch (\PDOException $e) {
             throw new DatabaseException($e->getMessage());
         }
 
-        return self::$connection;
+        return $this->connection;
     }
 
-    public static function config($config)
+    public function config($config)
     {
-        !isset($config['driver']) || self::setDriver($config['driver']);
-        !isset($config['host']) || self::setHost($config['host']);
-        !isset($config['port']) || self::setPort($config['port']);
-        !isset($config['user']) || self::setUser($config['user']);
-        !isset($config['password']) || self::setPassword($config['password']);
-        !isset($config['database']) || self::setDatabase($config['database']);
-        !isset($config['charset']) || self::setCharset($config['charset']);
-        !isset($config['handler']) || self::setHandler($config['handler']);
+        !isset($config['driver']) || $this->setDriver($config['driver']);
+        !isset($config['host']) || $this->setHost($config['host']);
+        !isset($config['port']) || $this->setPort($config['port']);
+        !isset($config['user']) || $this->setUser($config['user']);
+        !isset($config['password']) || $this->setPassword($config['password']);
+        !isset($config['database']) || $this->setDatabase($config['database']);
+        !isset($config['charset']) || $this->setCharset($config['charset']);
+        !isset($config['handler']) || $this->setHandler($config['handler']);
 
         if (isset($config['handlerOptions'])) {
             foreach ($config['handlerOptions'] as $key => $value) {
-                self::addHandlerOptions($key, $value);
+                $this->addHandlerOptions($key, $value);
             }
         }
     }
@@ -332,14 +403,14 @@ class PDO
     /**
      * @return string
      */
-    public static function getConnectionString()
+    public function getConnectionString()
     {
         $str = '';
 
-        $str .= self::getDriver() . ':host=' . self::getHost() . ';';
-        $str .= (self::getPort()) ? 'port=' . self::getPort() . ';' : '';
-        $str .= (self::getDatabase()) ? 'dbname=' . self::getDatabase() . ';' : '';
-        $str .= (self::getCharset()) ? 'charset=' . self::getCharset() . ';' : '';
+        $str .= $this->getDriver() . ':host=' . $this->getHost() . ';';
+        $str .= ($this->getPort()) ? 'port=' . $this->getPort() . ';' : '';
+        $str .= ($this->getDatabase()) ? 'dbname=' . $this->getDatabase() . ';' : '';
+        $str .= ($this->getCharset()) ? 'charset=' . $this->getCharset() . ';' : '';
 
         return $str;
     }

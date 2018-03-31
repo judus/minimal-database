@@ -5,7 +5,7 @@ namespace Maduser\Minimal\Database\ORM;
 use Maduser\Minimal\Collections\Collection;
 use Maduser\Minimal\Collections\Contracts\CollectionInterface;
 use Maduser\Minimal\Database\Exceptions\DatabaseException;
-use Maduser\Minimal\Database\Connectors\PDO;
+use Maduser\Minimal\Database\DB;
 use Maduser\Minimal\Database\QueryBuilder;
 
 class ORM
@@ -401,7 +401,7 @@ class ORM
      */
     public function __construct($connection = null)
     {
-        ! is_null($connection) || $connection = PDO::connection();
+        ! is_null($connection) || $connection = DB::connection();
 
         $builder = $this->newQueryBuilder();
         $builder->setDb($connection);
