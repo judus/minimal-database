@@ -19,7 +19,7 @@
     }
   },
   "require": {
-    "minimal/collections": "v0.1.4"
+    "minimal/collections": "v0.2.0"
   },
   "require-dev": {
     "phpunit/phpunit": "4.*"
