@@ -445,6 +445,8 @@ class ORM
      * @param array $data
      *
      * @return ORM|Collection
+     * @throws \Maduser\Minimal\Collections\Exceptions\InvalidKeyException
+     * @throws \Maduser\Minimal\Collections\Exceptions\KeyInUseException
      */
     public static function create(array $data = [])
     {
@@ -476,6 +478,7 @@ class ORM
 
     /**
      * @return CollectionInterface
+     * @throws DatabaseException
      */
     public static function all()
     {
@@ -532,6 +535,7 @@ class ORM
      * @param int $id
      *
      * @return ORM|null
+     * @throws DatabaseException
      */
     public function getById(int $id)
     {
@@ -548,6 +552,7 @@ class ORM
      * @param null $sql
      *
      * @return ORM|null
+     * @throws DatabaseException
      */
     public function getFirst($sql = null)
     {
@@ -564,6 +569,9 @@ class ORM
      * @param null $sql
      *
      * @return ORM|null
+     * @throws DatabaseException
+     * @throws \Maduser\Minimal\Collections\Exceptions\InvalidKeyException
+     * @throws \Maduser\Minimal\Collections\Exceptions\KeyInUseException
      */
     public function first($sql = null)
     {
@@ -588,6 +596,8 @@ class ORM
      *
      * @return Collection|null
      * @throws DatabaseException
+     * @throws \Maduser\Minimal\Collections\Exceptions\InvalidKeyException
+     * @throws \Maduser\Minimal\Collections\Exceptions\KeyInUseException
      */
     public function getAll($sql = null)
     {

@@ -1,6 +1,7 @@
 <?php namespace Maduser\Minimal\Database;
 
 use Maduser\Minimal\Database\Connectors\PDO;
+use Maduser\Minimal\Database\Exceptions\DatabaseException;
 
 class DB
 {
@@ -31,10 +32,10 @@ class DB
     }
 
     /**
-     * @param PDOConnection $connector
-     * @param string        $name
+     * @param PDO    $connector
+     * @param string $name
      *
-     * @throws GallyException
+     * @throws DatabaseException
      */
     public static function add(PDO $connector, $name = 'default')
     {
