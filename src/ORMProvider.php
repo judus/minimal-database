@@ -7,7 +7,7 @@ use Maduser\Minimal\Framework\Providers\AbstractProvider;
 
 class ORMProvider extends AbstractProvider
 {
-    public function register()
+    public function resolve()
     {
         if ($databaseConfig = Config::item('database')) {
             DB::connections($databaseConfig);

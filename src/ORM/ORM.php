@@ -179,7 +179,7 @@ class ORM
      */
     public function setOrderBy(string $orderBy): ORM
     {
-        $this->orderBy = $orderBy;
+        $this->builder->setOrderBy($orderBy);
 
         return $this;
     }
@@ -542,7 +542,11 @@ class ORM
         $result = $this->builder->getById($id);
 
         if (isset($result[0])) {
-            return self::instance($result[0]);
+            $collection = Collection::create();
+            $collection->add(self::instance($result[0]), $result[0][$this->getPrimaryKey()]);
+            $this->resolveRelations($collection);
+
+            return $collection->first();
         }
 
         return null;
@@ -608,7 +612,7 @@ class ORM
             $collection = new Collection();
 
             foreach ($results as $key => $row) {
-                $collection->add(self::instance($row));
+                $collection->add(self::instance($row), $row[$this->getPrimaryKey()]);
             }
 
             $this->resolveRelations($collection);
@@ -841,7 +845,6 @@ class ORM
                 return $this;
             }
             throw new DatabaseException('Key ' . $_name . ' does not exist.');
-
         }
 
         $result = call_user_func_array([$this->builder, $name], $arguments);

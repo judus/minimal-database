@@ -322,7 +322,13 @@ class QueryBuilder
                 $condition .= empty($condition) ? '' : $and;
 
                 if ($con == ' IN ') {
-                    $condition .= $key . $con . '(' . $val . ')';
+                    $str = $val;
+                    if (is_array($val)) {
+                        $str = rtrim(str_repeat('?,', count($val)), ',');
+                        $val = implode(',', $val);
+                    }
+
+                    $condition .= $key . $con . '(' . $str . ')';
                 } else {
                     $condition .= $key . $con . $val;
                 }
@@ -631,20 +637,28 @@ class QueryBuilder
         }
 
         if ($cond == 'IN') {
-            //$value = "(" . $value . ")";
+
+            $placeholders = [];
+
+            foreach ($value as $n => $val) {
+                $placeholders[$n] = $key . '_' . $i . '_' . $n;
+                $this->addParameter($placeholders[$n], $val);
+            }
+
+            $placeholder = implode(', :', $placeholders);
+
         } else {
             //$value = $this->db->quote($value);
+            $placeholder = $key . '_' . $i;
+            $this->addParameter($placeholder, $value);
         }
 
-        $suffix = '_' . $i;
-
-        $this->addParameter($key . $suffix, $value);
 
         return [
             str_replace('``', '', "`" . $key . "`"),
             " " . trim($cond) . " ",
             //is_null($value) ? "NULL" : $value,
-            ":" . $key . $suffix,
+            ":" . $placeholder,
             " " . trim($and) . " "
         ];
     }
@@ -679,7 +693,6 @@ class QueryBuilder
 
             $sql = $sqlSelect . $sqlFrom . $sqlWhere . $sqlOrder . $sqlLimit;
         }
-        $this->setLastQuery($sql);
 
         try {
             $stmt = $this->db->prepare($sql);
@@ -770,10 +783,11 @@ class QueryBuilder
      */
     public function getById($id)
     {
-        $sql = "SELECT * FROM " . $this->getTable() . " WHERE " . $this->getPrimaryKey() . " = " . intval($id) . ";";
+        $sql = "SELECT ".$this->getSelect()." FROM " . $this->getTable() . " WHERE " . $this->getPrimaryKey() . " = " . intval($id) . ";";
 
         try {
             $result = $this->db->query($sql);
+            $this->setLastQuery($sql);
         } catch (\PDOException $e) {
             throw new DatabaseException($e->getMessage() . '<br>' . $sql);
         }
@@ -802,7 +816,13 @@ class QueryBuilder
         }
 
         if ($this->timestamps && !is_null($this->timestampCreatedAt)) {
-            $params[':' . $this->timestampCreatedAt] = date('Y-m-d H:i:s');
+
+            $dateTime = date('Y-m-d H:i:s');
+            $params[':' . $this->timestampCreatedAt] = $dateTime;
+
+            if (!is_null($this->timestampUpdatedAt)) {
+                $params[':' . $this->timestampUpdatedAt] = $dateTime;
+            }
         }
 
         $paramStr = implode("`" . ',', array_keys($params));
@@ -950,12 +970,15 @@ class QueryBuilder
      */
     public function collect($result = null)
     {
+        /** @var \PDOStatement $result */
         $result = $result ? $result : $this->getResult();
 
         if ($result->rowCount() > 0) {
             $collection = new Collection();
-            foreach ($result->fetchAll(\PDO::FETCH_ASSOC) as $row) {
-                $collection->add($row);
+            foreach ($result->fetchAll() as $row) {
+                $key = isset($row[$this->getPrimaryKey()]) ?
+                    $row[$this->getPrimaryKey()] : null;
+                $collection->add($row, $key);
             }
 
             return $collection;

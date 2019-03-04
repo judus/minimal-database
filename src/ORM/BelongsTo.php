@@ -22,7 +22,7 @@ class BelongsTo extends AbstractRelation
     ) {
 
         $collection = $collection->filter(function($value) {
-            return ! is_null($value);
+            return ! is_null($value->{$this->getForeignKey()});
         });
 
         $foreignKeys = $collection->extract($this->getForeignKey());
@@ -33,7 +33,6 @@ class BelongsTo extends AbstractRelation
 
         if (! $relatedCollection) return;
 
-        /** @var ORM $item */
         foreach ($collection->getArray() as &$item) {
             foreach ($relatedCollection as $related) {
                 if ($item->{$this->getForeignKey()} ==
@@ -62,11 +61,11 @@ class BelongsTo extends AbstractRelation
         $class = $this->getClass();
 
         /** @noinspection PhpUndefinedMethodInspection */
-        return $class::instance()->where([
-            $this->localKey,
-            'IN',
-            implode(',', $array)
+        $result = $class::instance()->where([
+            $this->localKey, 'IN', $array
         ])->getAll();
+
+        return $result;
     }
 
     public function __call($name, $args)
